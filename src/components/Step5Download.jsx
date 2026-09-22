@@ -112,8 +112,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
 
-      const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      const res = await fetch(`${API}/api/books/analyze-style`, {
+      const res = await fetch(`${API}/books/analyze-style`, {
         method: 'POST',
         body: formDataUpload,
       });
