@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* ========================================================================== */
+/* HIDE SCROLLBARS GLOBALLY ACROSS ALL BROWSERS (CHROME, SAFARI, EDGE, FIREFOX) */
+/* Content remains fully scrollable with wheel / trackpad / touch */
+/* ========================================================================== */
+*::-webkit-scrollbar,
+::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+}
+
+* {
+  -ms-overflow-style: none !important; /* IE & Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+  background: transparent !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* ========================================================================== */
+/* RICH TEXT EDITOR & BOOK LIST STYLES (OVERRIDE TAILWIND PREFLIGHT RESET)    */
+/* ========================================================================== */
+.section-body-content,
+.section-content {
+  white-space: normal !important;
+}
+
+.section-body-content p,
+.section-content p {
+  margin: 0 0 10px 0;
+}
+
+.section-body-content ul,
+.section-content ul {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  margin: 8px 0 12px 24px !important;
+  padding-left: 4px !important;
+}
+
+.section-body-content ol,
+.section-content ol {
+  list-style-type: decimal !important;
+  list-style-position: outside !important;
+  margin: 8px 0 12px 24px !important;
+  padding-left: 4px !important;
+}
+
+.section-body-content li,
+.section-content li {
+  display: list-item !important;
+  margin-bottom: 3px !important;
+  line-height: 1.5 !important;
+}
+
+.section-body-content li p,
+.section-content li p {
+  margin: 0 !important;
+  display: inline !important;
+}
+
+.section-body-content b,
+.section-body-content strong {
+  font-weight: 700 !important;
+}
+
+.section-body-content i,
+.section-body-content em {
+  font-style: italic !important;
+}
+
+.section-body-content u {
+  text-decoration: underline !important;
+}
+
+.section-body-content s,
+.section-body-content strike,
+.section-body-content del {
+  text-decoration: line-through !important;
+}
