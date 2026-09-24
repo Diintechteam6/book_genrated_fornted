@@ -32,7 +32,7 @@ const TEMPLATES = [
 ];
 
 export default function Step5Download({ book, formData, setFormData, bookId, onReset, onDownload }) {
-  const [isEditMode, setIsEditMode] = useState(true); // Default to live edit mode enabled
+  const [isEditMode, setIsEditMode] = useState(false); // Default to live edit mode disabled
   const [currentTemplate, setCurrentTemplate] = useState(formData.templateId || 'modern');
   const [editableBook, setEditableBook] = useState(book || null);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -65,7 +65,25 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
   const [isPreviewingPDF, setIsPreviewingPDF] = useState(false);
   const [previewPdfBlobUrl, setPreviewPdfBlobUrl] = useState(null);
   const [showPdfModal, setShowPdfModal] = useState(false);
+  const [pdfProgress, setPdfProgress] = useState(0); // Progress counter for PDF generation
   const aiInputRef = useRef(null);
+
+  // Simulate PDF generation progress
+  useEffect(() => {
+    let interval;
+    if (isDownloading || isPreviewingPDF) {
+      setPdfProgress(1);
+      interval = setInterval(() => {
+        setPdfProgress(prev => {
+          if (prev >= 99) return 99;
+          return prev + Math.floor(Math.random() * 4) + 1; // increase 1 to 4 percent every 400ms
+        });
+      }, 400);
+    } else {
+      setPdfProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isDownloading, isPreviewingPDF]);
 
   // 6th Template: Style from Uploaded Reference Book
   const [isAnalyzingStyle, setIsAnalyzingStyle] = useState(false);
@@ -183,6 +201,11 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
   const handleCategoryBlur = (e) => {
     const text = e.currentTarget.innerText.trim();
     setEditableBook(prev => ({ ...prev, category: text }));
+  };
+
+  const handleGenericMetaBlur = (field) => (e) => {
+    const text = e.currentTarget.innerText.trim();
+    setEditableBook(prev => ({ ...prev, [field]: text }));
   };
 
   const handleChapterTitleBlur = (chIdx, e) => {
@@ -1391,7 +1414,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
             {isPreviewingPDF ? (
               <>
                 <div className="w-3.5 h-3.5 border-2 border-rose-600 border-t-transparent rounded-full animate-spin" />
-                Generating A4 PDF Preview...
+                Generating A4 PDF Preview... ({pdfProgress}%)
               </>
             ) : (
               <>
@@ -1410,7 +1433,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
             {isDownloading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Generating PDF...
+                Generating PDF... ({pdfProgress}%)
               </>
             ) : (
               <>
@@ -1427,6 +1450,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
         </div>
 
         {/* CARD 2: SELECTED STYLE (TEMPLATES) */}
+        {isEditMode && (
         <div className="bg-white border border-gray-200 rounded-none p-4 shadow-md space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-gray-600 uppercase tracking-wider block">
@@ -1546,31 +1570,34 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
 
           </div>
         </div>
+        )}
 
         {/* CARD 3: TOTAL CHAPTERS (CHAPTER QUICK NAVIGATOR) */}
-        <div className="bg-white border border-gray-200 rounded-none p-4 shadow-md space-y-2.5 max-h-[350px] overflow-y-auto no-scrollbar">
+        <div className="bg-white border border-gray-200 rounded-none p-4 shadow-md space-y-2.5 max-h-[380px] overflow-y-auto no-scrollbar">
           <div className="flex items-center justify-between pb-1.5 border-b border-gray-100">
             <span className="text-xs font-bold text-gray-700">
               Chapters ({(editableBook.chapters || []).length})
             </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleAddChapter}
-                className="text-[11px] text-emerald-600 hover:text-emerald-700 font-bold cursor-pointer hover:underline flex items-center gap-1"
-                title="Add a new chapter"
-              >
-                <FaPlus className="text-[9px]" /> Add
-              </button>
-              <span className="text-gray-300">|</span>
-              <span
-                className="text-[11px] text-indigo-600 font-semibold cursor-pointer hover:underline flex items-center gap-1"
-                onClick={handleUpdateIndexPage}
-                title="Sync Table of Contents with current chapters"
-              >
-                <FaRotate className="text-[9px]" /> Sync Index
-              </span>
-            </div>
+            {isEditMode && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAddChapter}
+                  className="text-[11px] text-emerald-600 hover:text-emerald-700 font-bold cursor-pointer hover:underline flex items-center gap-1"
+                  title="Add a new chapter"
+                >
+                  <FaPlus className="text-[9px]" /> Add
+                </button>
+                <span className="text-gray-300">|</span>
+                <span
+                  className="text-[11px] text-indigo-600 font-semibold cursor-pointer hover:underline flex items-center gap-1"
+                  onClick={handleUpdateIndexPage}
+                  title="Sync Table of Contents with current chapters"
+                >
+                  <FaRotate className="text-[9px]" /> Sync Index
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1">
@@ -1620,7 +1647,8 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
       {/* ========================================================================= */}
       <main className="studio-right-panel min-w-0">
         {/* TOP FIXED CONTROLS GROUP (Ribbon + Viewer Bar - Never Scrolls Away) */}
-        <div className="studio-top-controls-group">
+        {isEditMode && (
+          <div className="studio-top-controls-group">
           {/* 🌟 MS WORD FIXED TOP RIBBON BAR (Docked Permanently at Top) */}
           {isEditMode && (
             <div
@@ -1924,7 +1952,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                     disabled={isDownloading}
                     className="px-3.5 py-1.5 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-l-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
                   >
-                    {isDownloading ? 'Generating...' : <><FaFilePdf className="text-xs" /> Download PDF</>}
+                    {isDownloading ? `Generating... (${pdfProgress}%)` : <><FaFilePdf className="text-xs" /> Download PDF</>}
                   </button>
                   <button
                     type="button"
@@ -2002,28 +2030,14 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
             </div>
           </div>
         </div>
+        )}
 
         {/* ========================================================= */}
         {/* VIEW 1: ✏️ CHAPTER WORD EDITOR (CONTINUOUS MS WORD PAPER) */}
         {/* ========================================================= */}
         {viewMode === 'editor' && (
           <div className="word-document-canvas transition-all">
-            {/* Friendly tip banner */}
-            <div className="w-full max-w-[840px] mb-3 mx-auto bg-indigo-50/90 border border-indigo-200/80 rounded-xl px-4 py-2.5 text-xs text-indigo-900 flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2">
-                <FaPenToSquare className="text-base text-indigo-600 shrink-0" />
-                <span>
-                  <strong>Full Word Freedom:</strong> Aap yahan bina kisi page limit ya cut-off ke jitna marzi Enter daba kar likh sakte hain. Poora text safe rahega!
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setViewMode('preview')}
-                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-xs shrink-0 flex items-center gap-1.5"
-              >
-                <FaBookOpen className="text-xs" /> View as Pages
-              </button>
-            </div>
+            {/* Removed tip banner per user request */}
 
             {/* Inject custom style from uploaded reference book */}
             {currentTemplate === 'custom-style' && customStyleCSS && (
@@ -2037,23 +2051,25 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                   Chapter {activeCh.chapterNumber || activeChapterIdx + 1}
                 </span>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleAddSection(activeChapterIdx)}
-                    className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1"
-                  >
-                    <FaPlus className="text-[10px]" /> Add Section
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteChapter(activeChapterIdx)}
-                    title="Delete this chapter"
-                    className="text-xs px-2.5 py-1.5 text-red-500 hover:bg-red-50 font-semibold rounded-md transition-colors cursor-pointer flex items-center gap-1"
-                  >
-                    <FaTrashCan className="text-xs" /> Delete Chapter
-                  </button>
-                </div>
+                {isEditMode && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleAddSection(activeChapterIdx)}
+                      className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      <FaPlus className="text-[10px]" /> Add Section
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteChapter(activeChapterIdx)}
+                      title="Delete this chapter"
+                      className="text-xs px-2.5 py-1.5 text-red-500 hover:bg-red-50 font-semibold rounded-md transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      <FaTrashCan className="text-xs" /> Delete Chapter
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Editable Chapter Title */}
@@ -2100,60 +2116,62 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                           dangerouslySetInnerHTML={{ __html: sec.heading || `Section ${secIdx + 1}` }}
                         />
 
-                        <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                          {/* Section Gap Stepper */}
-                          <div className="flex items-center gap-1 bg-white hover:bg-gray-50 border border-gray-300 rounded-md px-2 py-0.5 text-xs text-gray-700 shadow-2xs" title="Adjust gap below this section">
-                            <span className="text-[10px] text-gray-400 font-bold uppercase select-none mr-0.5">Gap</span>
+                        {isEditMode && (
+                          <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                            {/* Section Gap Stepper */}
+                            <div className="flex items-center gap-1 bg-white hover:bg-gray-50 border border-gray-300 rounded-md px-2 py-0.5 text-xs text-gray-700 shadow-2xs" title="Adjust gap below this section">
+                              <span className="text-[10px] text-gray-400 font-bold uppercase select-none mr-0.5">Gap</span>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateSectionSpacing(activeChapterIdx, secIdx, Math.max(0, secGap - 4));
+                                }}
+                                className="w-5 h-5 rounded hover:bg-gray-200 text-gray-700 font-bold flex items-center justify-center cursor-pointer transition active:scale-95"
+                                title="Reduce section gap (-4px)"
+                              >
+                                <FaMinus className="text-[9px]" />
+                              </button>
+                              <span className="font-mono font-bold text-gray-800 text-[11px] min-w-[28px] text-center select-none">
+                                {secGap}px
+                              </span>
+                              <button
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateSectionSpacing(activeChapterIdx, secIdx, Math.min(80, secGap + 4));
+                                }}
+                                className="w-5 h-5 rounded hover:bg-gray-200 text-gray-700 font-bold flex items-center justify-center cursor-pointer transition active:scale-95"
+                                title="Increase section gap (+4px)"
+                              >
+                                <FaPlus className="text-[9px]" />
+                              </button>
+                            </div>
+
                             <button
                               type="button"
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateSectionSpacing(activeChapterIdx, secIdx, Math.max(0, secGap - 4));
-                              }}
-                              className="w-5 h-5 rounded hover:bg-gray-200 text-gray-700 font-bold flex items-center justify-center cursor-pointer transition active:scale-95"
-                              title="Reduce section gap (-4px)"
+                              onClick={() => handleOpenSectionAi(activeChapterIdx, secIdx)}
+                              className="px-2.5 py-1 text-xs font-bold rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-700 border border-purple-200/80 shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Ask AI to expand, polish, or edit this section"
                             >
-                              <FaMinus className="text-[9px]" />
+                              <FaWandMagicSparkles className="text-xs" />
+                              <span>Ask AI</span>
                             </button>
-                            <span className="font-mono font-bold text-gray-800 text-[11px] min-w-[28px] text-center select-none">
-                              {secGap}px
-                            </span>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => e.preventDefault()}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateSectionSpacing(activeChapterIdx, secIdx, Math.min(80, secGap + 4));
-                              }}
-                              className="w-5 h-5 rounded hover:bg-gray-200 text-gray-700 font-bold flex items-center justify-center cursor-pointer transition active:scale-95"
-                              title="Increase section gap (+4px)"
-                            >
-                              <FaPlus className="text-[9px]" />
-                            </button>
+
+                            {(activeCh.sections || []).length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSection(activeChapterIdx, secIdx)}
+                                className="text-xs text-red-500 hover:text-red-700 p-1 cursor-pointer flex items-center justify-center"
+                                title="Remove this Section"
+                              >
+                                <FaXmark className="text-xs" />
+                              </button>
+                            )}
                           </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handleOpenSectionAi(activeChapterIdx, secIdx)}
-                            className="px-2.5 py-1 text-xs font-bold rounded-lg bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-700 border border-purple-200/80 shadow-2xs hover:shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                            title="Ask AI to expand, polish, or edit this section"
-                          >
-                            <FaWandMagicSparkles className="text-xs" />
-                            <span>Ask AI</span>
-                          </button>
-
-                          {(activeCh.sections || []).length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteSection(activeChapterIdx, secIdx)}
-                              className="text-xs text-red-500 hover:text-red-700 p-1 cursor-pointer flex items-center justify-center"
-                              title="Remove this Section"
-                            >
-                              <FaXmark className="text-xs" />
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
 
                       <div
@@ -2172,23 +2190,25 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
               </div>
 
               {/* Bottom: Add Section & Add Next Chapter Buttons */}
-              <div className="mt-8 pt-4 border-t border-dashed border-gray-200 text-center flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleAddSection(activeChapterIdx)}
-                  className="px-5 py-2 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-xs"
-                >
-                  <FaPlus className="text-xs" /> Add Section to Chapter {activeCh.chapterNumber || activeChapterIdx + 1}
-                </button>
+              {isEditMode && (
+                <div className="mt-8 pt-4 border-t border-dashed border-gray-200 text-center flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleAddSection(activeChapterIdx)}
+                    className="px-5 py-2 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    <FaPlus className="text-xs" /> Add Section to Chapter {activeCh.chapterNumber || activeChapterIdx + 1}
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={handleAddChapter}
-                  className="px-5 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-xs"
-                >
-                  <FaFileLines className="text-xs" /> Add Next Chapter
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    onClick={handleAddChapter}
+                    className="px-5 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    <FaFileLines className="text-xs" /> Add Next Chapter
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -2289,7 +2309,73 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
               )}
             </div>
 
-            {/* PAGES 2+: INDEX PAGES / TABLE OF CONTENTS (A4 SHEETS) */}
+            {/* PAGE 2: TITLE & COPYRIGHT PAGE (A4 SHEET) */}
+            <div
+              className={`book-page pdf-page-sheet a4-page-content template-${currentTemplate} flex flex-col justify-between`}
+              style={{
+                maxWidth: `${dynamicWidthPx}px`,
+                minHeight: `${dynamicMinHeightPx}px`,
+                aspectRatio: dynamicAspectRatio,
+                padding: '10%'
+              }}
+            >
+              {/* Title Section */}
+              <div className="text-center mt-12">
+                <h1 
+                  contentEditable={isEditMode}
+                  suppressContentEditableWarning={true}
+                  onBlur={handleTitleBlur}
+                  className={`text-4xl font-bold mb-4 text-gray-900 ${isEditMode ? 'editable-focus outline-none ring-2 ring-indigo-400 rounded px-2' : ''}`} 
+                  style={{ fontFamily: currentTemplate === 'classic' ? 'serif' : currentTemplate === 'technical' ? 'monospace' : 'sans-serif' }}
+                >
+                  {editableBook.title || 'Untitled Book'}
+                </h1>
+                <h2 
+                  contentEditable={isEditMode}
+                  suppressContentEditableWarning={true}
+                  onBlur={handleGenericMetaBlur('subtitle')}
+                  className={`text-xl font-light mb-8 text-gray-600 ${isEditMode ? 'editable-focus outline-none ring-2 ring-indigo-400 rounded px-2' : ''}`} 
+                  style={{ fontFamily: currentTemplate === 'classic' ? 'serif' : currentTemplate === 'technical' ? 'monospace' : 'sans-serif' }}
+                >
+                  {editableBook.subtitle || 'Book Subtitle'}
+                </h2>
+                <h3 
+                  contentEditable={isEditMode}
+                  suppressContentEditableWarning={true}
+                  onBlur={handleAuthorBlur}
+                  className={`text-lg font-bold text-gray-800 mt-6 ${isEditMode ? 'editable-focus outline-none ring-2 ring-indigo-400 rounded px-2' : ''}`} 
+                  style={{ fontFamily: currentTemplate === 'classic' ? 'serif' : currentTemplate === 'technical' ? 'monospace' : 'sans-serif' }}
+                >
+                  {editableBook.author || 'Author Name'}
+                </h3>
+              </div>
+              
+              {/* Copyright Section */}
+              <div className="text-xs text-gray-700 leading-relaxed mt-auto pt-8" style={{ fontFamily: currentTemplate === 'classic' ? 'serif' : currentTemplate === 'technical' ? 'monospace' : 'sans-serif' }}>
+                <p className="font-bold mb-3">
+                  Copyright &copy; 
+                  <span contentEditable={isEditMode} suppressContentEditableWarning={true} onBlur={handleGenericMetaBlur('publishedYear')} className={`${isEditMode ? 'bg-indigo-50 px-1 rounded outline-none ring-2 ring-indigo-400' : ''}`}>{editableBook.publishedYear || new Date().getFullYear().toString()}</span> 
+                  {' '}by{' '}
+                  <span contentEditable={isEditMode} suppressContentEditableWarning={true} onBlur={handleAuthorBlur} className={`${isEditMode ? 'bg-indigo-50 px-1 rounded outline-none ring-2 ring-indigo-400' : ''}`}>{editableBook.author || 'Author Name'}</span>
+                </p>
+                <p 
+                  contentEditable={isEditMode} 
+                  suppressContentEditableWarning={true} 
+                  onBlur={handleGenericMetaBlur('copyrightText')}
+                  className={`mb-4 text-justify opacity-80 ${isEditMode ? 'editable-focus outline-none ring-2 ring-indigo-400 rounded px-2 py-1' : ''}`}
+                >
+                  {editableBook.copyrightText || 'All rights reserved. No part of this publication may be reproduced, distributed, or transmitted in any form or by any means, including photocopying, recording, or other electronic or mechanical methods, without the prior written permission of the publisher, except in the case of brief quotations embodied in critical reviews and certain other noncommercial uses permitted by copyright law.'}
+                </p>
+                <div className="mb-4 space-y-1">
+                  <p><strong>Publisher:</strong> <span contentEditable={isEditMode} suppressContentEditableWarning={true} onBlur={handleGenericMetaBlur('publisher')} className={`${isEditMode ? 'bg-indigo-50 px-1 rounded outline-none ring-2 ring-indigo-400' : ''}`}>{editableBook.publisher || 'Independent Publisher'}</span></p>
+                  <p><strong>Edition:</strong> <span contentEditable={isEditMode} suppressContentEditableWarning={true} onBlur={handleGenericMetaBlur('edition')} className={`${isEditMode ? 'bg-indigo-50 px-1 rounded outline-none ring-2 ring-indigo-400' : ''}`}>{editableBook.edition || 'First Edition'}</span></p>
+                  <p><strong>ISBN:</strong> <span contentEditable={isEditMode} suppressContentEditableWarning={true} onBlur={handleGenericMetaBlur('isbn')} className={`${isEditMode ? 'bg-indigo-50 px-1 rounded outline-none ring-2 ring-indigo-400' : ''}`}>{editableBook.isbn || '978-X-XX-XXXXXX-X'}</span></p>
+                </div>
+                <p className="opacity-70">Printed in the United States of America.</p>
+              </div>
+            </div>
+
+            {/* PAGES 3+: INDEX PAGES / TABLE OF CONTENTS (A4 SHEETS) */}
             {tocPages.map((pageItems, tocPageIdx) => {
               const isFirstTOCPage = tocPageIdx === 0;
               const pageNumberRoman = toRoman(tocPageIdx + 1);
@@ -3638,17 +3724,17 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
       {/* 📄 REAL A4 PDF HIGH-FIDELITY LIVE PREVIEW MODAL */}
       {/* ========================================================================= */}
       {showPdfModal && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-700/80 rounded-2xl w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl overflow-hidden ring-1 ring-white/10">
+        <div className="fixed inset-0 z-[1000000] bg-slate-900/60 backdrop-blur-sm flex flex-col items-center justify-center p-2 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-gray-200 rounded-none w-full max-w-6xl h-[92vh] flex flex-col shadow-2xl overflow-hidden ring-1 ring-black/5">
             {/* Modal Header */}
-            <div className="bg-slate-800 px-4 py-3 border-b border-slate-700/80 flex items-center justify-between flex-wrap gap-2 text-white">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between flex-wrap gap-2 text-gray-800">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-rose-600/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+                <div className="w-8 h-8 rounded-none bg-indigo-100 border border-indigo-200 flex items-center justify-center text-indigo-600">
                   <FaFilePdf className="text-base" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-sm text-slate-100">
+                    <h3 className="font-bold text-sm text-gray-800">
                       Real A4 PDF Live Preview
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -3658,7 +3744,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                       {pageWidthMm} × {pageHeightMm} mm ({pageFormat})
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-[11px] text-gray-500">
                     Yeh exact wahi PDF file hai jo Puppeteer backend se generate hoti hai. Jaisa yahan dikhega, bilkul wahi download hoga!
                   </p>
                 </div>
@@ -3669,7 +3755,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                 <button
                   type="button"
                   onClick={() => handlePreviewRealPDF(true)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 rounded-none text-xs font-bold bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
                   title="Open in new browser tab"
                 >
                   <FaArrowUpRightFromSquare className="text-xs" />
@@ -3690,7 +3776,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                       handleDownloadPDF();
                     }
                   }}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 rounded-none text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
                   title="Download this exact PDF"
                 >
                   <FaFilePdf className="text-xs" />
@@ -3700,7 +3786,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
                 <button
                   type="button"
                   onClick={() => setShowPdfModal(false)}
-                  className="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-slate-700"
+                  className="w-8 h-8 rounded-none bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-800 flex items-center justify-center transition-colors cursor-pointer border border-transparent"
                   title="Close preview"
                 >
                   <FaXmark className="text-sm" />
@@ -3709,7 +3795,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
             </div>
 
             {/* Modal Body: Embedded PDF IFrame */}
-            <div className="flex-1 w-full bg-slate-950 relative overflow-hidden">
+            <div className="flex-1 w-full bg-gray-100/50 relative overflow-hidden">
               {previewPdfBlobUrl ? (
                 <iframe
                   src={previewPdfBlobUrl}
@@ -3719,13 +3805,13 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 gap-3">
                   <FaSpinner className="text-3xl text-indigo-400 animate-spin" />
-                  <p className="text-sm font-semibold">Generating exact A4 PDF preview...</p>
+                  <p className="text-sm font-semibold">Generating exact A4 PDF preview... ({pdfProgress}%)</p>
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="bg-slate-800 px-4 py-2 border-t border-slate-700/80 flex items-center justify-between text-xs text-slate-400">
+            <div className="bg-gray-50 px-4 py-2 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Section gaps, margins, page breaks and fonts are 100% matched with download.
@@ -3733,7 +3819,7 @@ export default function Step5Download({ book, formData, setFormData, bookId, onR
               <button
                 type="button"
                 onClick={() => setShowPdfModal(false)}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-semibold cursor-pointer border border-slate-600"
+                className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-none text-xs font-semibold cursor-pointer border border-gray-300"
               >
                 Close Preview
               </button>

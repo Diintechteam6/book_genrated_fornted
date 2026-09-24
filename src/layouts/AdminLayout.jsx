@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { FaBookOpen, FaUsers, FaChartPie, FaBell, FaSearch, FaUserCircle, FaBars, FaSignOutAlt } from 'react-icons/fa';
+import { FaBookOpen, FaUsers, FaChartPie, FaBell, FaSearch, FaUserCircle, FaBars, FaSignOutAlt, FaPalette } from 'react-icons/fa';
 import { FaWandMagicSparkles, FaBookBookmark } from 'react-icons/fa6';
 
 export default function AdminLayout({ onLogout }) {
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const currentRole = sessionStorage.getItem('adminRole') || localStorage.getItem('adminRole') || 'Admin';
+  const roleDisplay = currentRole.charAt(0).toUpperCase() + currentRole.slice(1);
+  const roleInitials = roleDisplay.substring(0, 2).toUpperCase();
 
   const handleLogoutClick = () => {
     if (onLogout) {
@@ -53,6 +56,17 @@ export default function AdminLayout({ onLogout }) {
               >
                 <FaWandMagicSparkles className="text-lg shrink-0" /> 
                 {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Book Generator</span>}
+              </NavLink>
+
+              <NavLink 
+                to="/templates" 
+                title="Templates Preview"
+                className={({ isActive }) => 
+                  `flex items-center ${isCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} py-3.5 rounded-xl transition-all font-medium ${isActive ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-100/80 hover:bg-white/10 hover:text-white'}`
+                }
+              >
+                <FaPalette className="text-lg shrink-0" /> 
+                {!isCollapsed && <span className="whitespace-nowrap overflow-hidden">Templates Preview</span>}
               </NavLink>
 
               <NavLink 
@@ -123,33 +137,18 @@ export default function AdminLayout({ onLogout }) {
             </button>
           </div>
 
-          {/* Right Section: Search + Notifications + Profile */}
+          {/* Right Section: Profile */}
           <div className="flex items-center gap-6">
-            
-            {/* Search Bar */}
-            <div className="relative w-64 md:w-80 hidden sm:block">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <FaSearch className="text-gray-400" />
+            <div 
+              className="flex items-center gap-3 cursor-pointer p-1.5 pr-5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors shadow-sm" 
+              onClick={() => navigate('/profile')}
+            >
+              <div className="w-9 h-9 bg-emerald-800 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-inner">
+                {roleInitials}
               </div>
-              <input 
-                type="text" 
-                placeholder="Search here..." 
-                className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-full bg-gray-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm transition-all shadow-sm"
-              />
-            </div>
-
-            <button className="text-gray-400 hover:text-gray-600 transition-colors relative">
-              <FaBell className="text-xl" />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white"></span>
-            </button>
-            
-            <div className="flex items-center gap-3 cursor-pointer pl-6 border-l border-gray-200" onClick={() => navigate('/profile')}>
-              <div className="w-10 h-10 bg-emerald-800 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md">
-                SA
-              </div>
-              <div className="hidden sm:flex flex-col">
-                <span className="text-sm font-bold text-gray-900 leading-none">Super Admin</span>
-                <span className="text-[11px] text-gray-500 mt-1">Super Admin</span>
+              <div className="hidden sm:flex flex-col text-left">
+                <span className="text-sm font-bold text-gray-900 leading-none">{roleDisplay}</span>
+                <span className="text-[11px] text-gray-500 mt-0.5 capitalize">{currentRole} Account</span>
               </div>
             </div>
           </div>

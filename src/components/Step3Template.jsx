@@ -15,7 +15,8 @@ import {
   FaQuoteLeft,
   FaListOl,
   FaArrowLeft,
-  FaRocket
+  FaRocket,
+  FaEye
 } from 'react-icons/fa6';
 
 export default function Step3Template({ formData, setFormData, onNext, onBack }) {
@@ -115,11 +116,22 @@ export default function Step3Template({ formData, setFormData, onNext, onBack })
             <div className="flex items-center gap-3 mb-2">
               <span className="text-2xl flex items-center justify-center w-8 h-8">{getTemplateIcon(t.id)}</span>
               <h3 className="font-bold text-gray-900 text-lg">{t.name}</h3>
-              {formData.templateId === t.id && (
-                <span className="ml-auto text-indigo-600 font-bold text-xs bg-indigo-100 px-2.5 py-1 rounded-full flex items-center gap-1">
-                  Selected <FaCheck className="text-[10px]" />
-                </span>
-              )}
+              
+              <div className="ml-auto flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); window.open('/templates', '_blank'); }}
+                  className="text-gray-400 hover:text-indigo-600 transition-colors p-1.5 rounded hover:bg-indigo-50 flex items-center gap-1 text-xs font-semibold"
+                  title="Live Preview Theme"
+                >
+                  <FaEye className="text-sm" /> <span className="hidden sm:inline">Preview</span>
+                </button>
+                {formData.templateId === t.id && (
+                  <span className="text-indigo-600 font-bold text-xs bg-indigo-100 px-2.5 py-1 rounded-full flex items-center gap-1">
+                    Selected <FaCheck className="text-[10px]" />
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-gray-500 text-sm">{t.description}</p>
           </div>

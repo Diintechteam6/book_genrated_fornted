@@ -10,6 +10,7 @@ import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import Clients from './pages/admin/Clients';
 import Profile from './pages/admin/Profile';
+import ClientPanel from './pages/client/ClientPanel';
 import './App.css';
 import { API } from './config';
 
@@ -43,6 +44,7 @@ export default function App() {
         {(sessionStorage.getItem('adminRole') || localStorage.getItem('adminRole')) === 'admin' && (
           <Route path="clients" element={<Clients />} />
         )}
+        <Route path="templates" element={<ClientPanel />} />
         <Route path="profile" element={<Profile />} />
       </Route>
       <Route path="/auto-login" element={<AutoLogin />} />

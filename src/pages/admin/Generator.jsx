@@ -147,23 +147,26 @@ export default function Generator() {
   const steps = ['Details', 'Content', 'Template', 'Processing', 'Preview & Download'];
 
   return (
-    <div className="w-full flex flex-col space-y-6">
+    <div className={`w-full flex flex-col space-y-6 ${step === 5 ? 'h-[calc(100vh-6rem)]' : 'max-w-5xl mx-auto'}`}>
       
       {/* Header & Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
-        <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight" style={{ fontFamily: "'Roboto', sans-serif" }}>Book Generator</h1>
-          <p className="text-gray-500 mt-1">Create, style, and download your books instantly.</p>
+      {step !== 5 && (
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2 shrink-0">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight" style={{ fontFamily: "'Roboto', sans-serif" }}>Book Generator</h1>
+            <p className="text-gray-500 mt-1">Create, style, and download your books instantly.</p>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className={`bg-white overflow-hidden flex-1 flex flex-col ${step === 5 ? '' : 'rounded-2xl shadow-sm border border-gray-100'}`}>
         
         {/* Stepper */}
         {isLoadingBook && (
           <div className="p-4 bg-emerald-50 text-emerald-700 text-center font-semibold">Loading book data...</div>
         )}
-          <div className="bg-gray-50/80 border-b border-gray-100 p-6">
+        {step !== 5 && (
+          <div className="bg-gray-50/80 border-b border-gray-100 p-6 shrink-0">
             <div className="max-w-4xl mx-auto">
               <div className="flex items-center justify-between relative">
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full z-0"></div>
@@ -200,9 +203,10 @@ export default function Generator() {
               </div>
             </div>
           </div>
+        )}
 
-          {/* Form Area */}
-          <div className="p-6 md:p-10 min-h-[500px]">
+        {/* Form Area */}
+        <div className={`flex-1 flex flex-col ${step === 5 ? '' : 'p-6 md:p-10'} min-h-[500px]`}>
             {step === 1 && (
               <Step1Details formData={formData} setFormData={setFormData} onNext={handleNext} />
             )}
